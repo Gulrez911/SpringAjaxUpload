@@ -1,0 +1,56 @@
+<form id="file-upload-form">
+    <label for="file-upload-input">Select file to upload</label>
+    <input type="file" id="file-upload-input" name="file">
+    <button type="submit">Start Upload</button>
+</form>
+
+
+$(document).ready(function () {
+    // bind form submit event
+    $("#file-upload-form").on("submit", function (e) {
+
+        // cancel the default behavior
+        e.preventDefault();
+
+        // use $.ajax() to upload file
+        $.ajax({
+            url: "/file-upload",
+            type: "POST",
+            data: new FormData(this),
+            enctype: 'multipart/form-data',
+            processData: false,
+            contentType: false,
+            cache: false,
+            success: function (res) {
+                console.log(res);
+            },
+            error: function (err) {
+                console.error(err);
+            }
+        });
+    });
+});
+
+
+@PostMapping("/file-upload")
+@ResponseBody
+public ResponseEntity<String> fileUpload(MultipartFile file) {
+    try {
+
+        // upload directory - change it to your own
+        String UPLOAD_DIR = "/opt/uploads";
+
+        // create a path from file name
+        Path path = Paths.get(UPLOAD_DIR, file.getOriginalFilename());
+
+        // save the file to `UPLOAD_DIR`
+        // make sure you have permission to write
+        Files.write(path, file.getBytes());
+    }
+    catch (Exception ex) {
+        ex.printStackTrace();
+        return new ResponseEntity<>("Invalid file format!!", HttpStatus.BAD_REQUEST);
+    }
+
+    return new ResponseEntity<>("File uploaded!!", HttpStatus.OK);
+}
